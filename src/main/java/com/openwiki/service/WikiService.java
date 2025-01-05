@@ -4,8 +4,6 @@ import com.openwiki.model.WikiSearchResult;
 import com.openwiki.model.Article;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -17,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WikiService {
-    private static final Logger logger = LoggerFactory.getLogger(WikiService.class);
     private static final String WIKI_API_URL = "https://it.wikipedia.org/w/api.php";
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
