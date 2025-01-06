@@ -1,6 +1,7 @@
 package com.openwiki;
 
 import io.javalin.Javalin;
+import io.javalin.json.JavalinJackson;
 import io.javalin.http.Context;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,29 +9,72 @@ import com.openwiki.config.DatabaseConfig;
 import com.openwiki.dao.ArticleDAO;
 import java.sql.Connection;
 import com.openwiki.controller.WikiController;
+import com.openwiki.middleware.AuthMiddleware;
+import com.openwiki.controller.AuthController;
+
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class Main {
     public static void main(String[] args) {
         Javalin app = Javalin.create(config -> {
             config.plugins.enableCors(cors -> {
                 cors.add(it -> {
-                    it.allowHost("http://localhost:3000"); // Frontend React
+                    it.reflectClientOrigin = true;
                     it.allowCredentials = true;
                 });
             });
+            // Abilita il logging dettagliato
+            config.plugins.enableDevLogging();
+            // Gestisci gli errori 404
+            config.http.defaultContentType = "application/json";
+            // Configura Jackson per gestire LocalDateTime
+            config.jsonMapper(new JavalinJackson().updateMapper(mapper -> 
+                mapper.registerModule(new JavaTimeModule())
+            ));
+        });
+
+        // Log all requests
+        app.before(ctx -> {
+            System.out.println("Incoming request: " + ctx.method() + " " + ctx.path());
+            System.out.println("Headers: " + ctx.headerMap());
+        });
+
+        // Error handlers
+        app.exception(Exception.class, (e, ctx) -> {
+            ctx.status(500);
+            ctx.json(Map.of("error", e.getMessage()));
+        });
+
+        app.error(404, ctx -> {
+            ctx.json(Map.of("error", "Not found: " + ctx.path()));
         });
 
         WikiController wikiController = new WikiController();
+        AuthController authController = new AuthController();
 
-        // Test endpoint base
+        // Auth endpoints (non protetti)
+        app.routes(() -> {
+            app.post("/api/auth/login", ctx -> {
+                System.out.println("Login endpoint hit");
+                authController.login(ctx);
+            });
+            app.get("/api/auth/user", authController::getUserInfo);
+        });
+
+        // Test endpoints (non protetti)
         app.get("/api/test", Main::testHandler);
-        
-        // Test endpoint per il database
         app.get("/api/test/db", Main::testDatabase);
 
-        // Wikipedia endpoints
+        // Applica autenticazione a tutti gli endpoint protetti
+        app.before("/api/*", new AuthMiddleware());
+        
+        // Wikipedia endpoints (protetti)
         app.get("/api/wikipedia/search", wikiController::search);
         app.get("/api/wikipedia/article/{title}", wikiController::getArticle);
+        app.get("/api/wikipedia/featured", wikiController::getFeaturedArticle);
+
+        // Endpoints protetti per gli articoli
+        app.get("/api/articles", wikiController::getUserArticles);
         app.post("/api/articles", wikiController::saveArticle);
 
         app.start(8080);
