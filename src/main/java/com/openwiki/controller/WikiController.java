@@ -56,15 +56,11 @@ public class WikiController {
     public void saveArticle(Context ctx) {
         try {
             Article article = ctx.bodyAsClass(Article.class);
-            
-            // Per ora usiamo un ID utente fisso per test
-            article.setUserId("4");  // ID dell'utente attualmente loggato
+            String userId = extractUserId(ctx);
+            article.setUserId(userId);
             article.setDateDownloaded(LocalDateTime.now());
-            
-            // Salva l'articolo
             Article savedArticle = articleDAO.save(article);
             ctx.json(savedArticle);
-            
         } catch (Exception e) {
             logger.error("Failed to save article: {}", e.getMessage(), e);
             ctx.status(500).json(Map.of("error", "Failed to save article: " + e.getMessage()));
@@ -73,12 +69,10 @@ public class WikiController {
 
     public void getUserArticles(Context ctx) {
         try {
-            // Usa lo stesso ID utente fisso
-            String userId = "4";  // ID dell'utente attualmente loggato
-            
+            String userId = extractUserId(ctx);
+            logger.info("Fetching articles for user {}", userId);
             List<Article> articles = articleDAO.findByUserId(userId);
             ctx.json(articles);
-            
         } catch (Exception e) {
             logger.error("Failed to get user articles: {}", e.getMessage(), e);
             ctx.status(500).json(Map.of("error", "Failed to get user articles: " + e.getMessage()));
@@ -97,22 +91,56 @@ public class WikiController {
     public void deleteArticle(Context ctx) {
         try {
             String articleId = ctx.pathParam("id");
-            String userId = "4"; // Stesso ID utente fisso
-            
+            String userId = extractUserId(ctx);
             logger.info("Deleting article {} for user {}", articleId, userId);
             boolean deleted = articleDAO.deleteArticle(articleId, userId);
-            
             if (deleted) {
                 logger.info("Article {} successfully deleted", articleId);
-                ctx.status(204); // No Content
+                ctx.status(204);
             } else {
                 logger.warn("Article {} not found or not owned by user {}", articleId, userId);
                 ctx.status(404).json(Map.of("error", "Article not found"));
             }
-            
         } catch (Exception e) {
             logger.error("Failed to delete article: {}", e.getMessage(), e);
             ctx.status(500).json(Map.of("error", "Failed to delete article: " + e.getMessage()));
+        }
+    }
+
+    private String extractUserId(Context ctx) {
+        try {
+            String sessionCookie = ctx.cookie("session");
+            if (sessionCookie == null) {
+                logger.warn("No session cookie found");
+                return "4";
+            }
+
+            // Estrai il payload dal cookie di sessione
+            String[] parts = sessionCookie.split("\\.");
+            if (parts.length < 2) {
+                logger.warn("Invalid session token format");
+                return "4";
+            }
+
+            // Decodifica il payload Base64
+            String payload = parts[0];  // Usa la prima parte invece della seconda
+            byte[] decodedBytes = Base64.getUrlDecoder().decode(payload);
+            String jsonStr = new String(decodedBytes, StandardCharsets.UTF_8);
+            logger.info("Decoded session payload: {}", jsonStr);
+
+            // Usa Jackson per il parsing JSON
+            JsonNode jsonNode = objectMapper.readTree(jsonStr);
+            if (jsonNode.has("user_id")) {
+                String userId = jsonNode.get("user_id").asText();
+                logger.info("Extracted user ID: {}", userId);
+                return userId;
+            }
+
+            logger.warn("Could not find user_id in session payload");
+            return "4";
+        } catch (Exception e) {
+            logger.error("Failed to extract user ID from session cookie: {}", e.getMessage());
+            return "4";
         }
     }
 } 
