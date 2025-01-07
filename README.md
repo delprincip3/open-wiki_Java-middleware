@@ -196,3 +196,67 @@ Distribuito sotto licenza MIT. Vedi `LICENSE` per maggiori informazioni.
 Del Principe - [@github](https://github.com/delprincip3)
 
 Project Link: [https://github.com/delprincip3/open-wiki-middleware](https://github.com/delprincip3/open-wiki-middleware) 
+
+## 🌐 API Utilizzate
+
+### Wikipedia API
+L'applicazione utilizza le seguenti API di Wikipedia:
+
+#### 1. API di Ricerca
+```http
+GET https://it.wikipedia.org/w/api.php?action=query&list=search&format=json
+```
+Utilizzata per la ricerca degli articoli. Parametri principali:
+- `srsearch`: termine di ricerca
+- `srlimit`: numero massimo di risultati
+- `sroffset`: offset per la paginazione
+
+#### 2. API Contenuto Articolo
+```http
+GET https://it.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info
+```
+Utilizzata per ottenere il contenuto completo di un articolo. Parametri:
+- `titles`: titolo dell'articolo
+- `explaintext`: per ottenere il testo pulito
+- `exintro`: per ottenere solo l'introduzione
+- `pithumbsize`: dimensione dell'immagine in evidenza
+
+#### 3. API Articolo del Giorno
+```http
+GET https://it.wikipedia.org/w/api.php?action=featuredfeed&feed=featured
+```
+Utilizzata per ottenere l'articolo in evidenza del giorno.
+
+### Flask Authentication API
+Endpoints del servizio di autenticazione:
+
+```http
+POST /api/auth/signup
+POST /api/auth/login
+GET /api/auth/user
+POST /api/auth/logout
+```
+
+Utilizzati per:
+- Registrazione nuovo utente
+- Login e generazione token
+- Verifica sessione utente
+- Logout e invalidazione token
+
+### Integrazione delle API
+
+Il middleware gestisce l'integrazione tra:
+1. **Frontend → Wikipedia**: 
+   - Ricerca articoli in tempo reale
+   - Recupero contenuto completo
+   - Fetch articolo del giorno
+
+2. **Frontend → Auth Service**:
+   - Gestione sessioni utente
+   - Validazione token
+   - Autenticazione richieste
+
+3. **Frontend → Database**:
+   - Salvataggio articoli
+   - Recupero articoli salvati
+   - Aggiornamento e eliminazione 
