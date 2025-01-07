@@ -13,17 +13,24 @@ public class AuthMiddleware implements Handler {
 
     @Override
     public void handle(@NotNull Context ctx) throws Exception {
+        // Log all headers for debugging
+        logger.debug("Request headers: {}", ctx.headerMap());
+        
         // Escludi gli endpoint pubblici
         if (ctx.path().startsWith("/api/test") || 
             ctx.path().startsWith("/api/auth") ||
             ctx.path().equals("/api/wikipedia/featured") ||
-            ctx.path().startsWith("/api/wikipedia/article/")) {
+            ctx.path().startsWith("/api/wikipedia/article/") ||
+            ctx.path().startsWith("/api/wikipedia/search")) {
+            logger.debug("Skipping auth for public endpoint: {}", ctx.path());
             return;
         }
 
         String userId = ctx.header("X-User-ID");
+        logger.debug("X-User-ID header value: {}", userId);
         
         if (userId == null || userId.trim().isEmpty()) {
+            logger.warn("Unauthorized access attempt to: {} - Missing X-User-ID header", ctx.path());
             Map<String, String> error = new HashMap<>();
             error.put("error", "Unauthorized: Missing or invalid user ID");
             error.put("code", "AUTH_REQUIRED");

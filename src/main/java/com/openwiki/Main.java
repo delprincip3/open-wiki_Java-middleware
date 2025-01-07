@@ -14,6 +14,7 @@ import com.openwiki.controller.AuthController;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+
 public class Main {
     public static void main(String[] args) {
         Javalin app = Javalin.create(config -> {
@@ -21,11 +22,11 @@ public class Main {
                 cors.add(it -> {
                     it.reflectClientOrigin = true;
                     it.allowCredentials = true;
+                    it.maxAge = 86400;
                 });
             });
-            // Abilita il logging dettagliato
+            
             config.plugins.enableDevLogging();
-            // Gestisci gli errori 404
             config.http.defaultContentType = "application/json";
             // Configura Jackson per gestire LocalDateTime
             config.jsonMapper(new JavalinJackson().updateMapper(mapper -> 
@@ -65,17 +66,18 @@ public class Main {
         app.get("/api/test", Main::testHandler);
         app.get("/api/test/db", Main::testDatabase);
 
-        // Applica autenticazione a tutti gli endpoint protetti
-        app.before("/api/*", new AuthMiddleware());
-        
+        // Configura gli endpoint senza protezione
+        app.post("/api/articles", wikiController::saveArticle);
+        app.get("/api/articles", wikiController::getUserArticles);
+        app.delete("/api/articles/{id}", wikiController::deleteArticle);
+
+        // Proteggi solo gli altri endpoint che necessitano autenticazione
+        app.before("/api/wikipedia/*", new AuthMiddleware());
+
         // Wikipedia endpoints (protetti)
         app.get("/api/wikipedia/search", wikiController::search);
         app.get("/api/wikipedia/article/{title}", wikiController::getArticle);
         app.get("/api/wikipedia/featured", wikiController::getFeaturedArticle);
-
-        // Endpoints protetti per gli articoli
-        app.get("/api/articles", wikiController::getUserArticles);
-        app.post("/api/articles", wikiController::saveArticle);
 
         app.start(8080);
     }
