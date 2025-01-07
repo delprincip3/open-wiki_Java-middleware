@@ -14,11 +14,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WikiService {
     private static final String API_URL = "https://it.wikipedia.org/w/api.php";
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
+    private static final Logger logger = LoggerFactory.getLogger(WikiService.class);
 
     public WikiService() {
         this.httpClient = HttpClient.newBuilder()
@@ -128,6 +131,9 @@ public class WikiService {
         if (page.has("thumbnail")) {
             article.setImageUrl(page.path("thumbnail").path("source").asText());
         }
+
+        logger.info("Created article with fields - imageUrl: {}, pageId: {}, wikiUrl: {}", 
+                    article.getImageUrl(), article.getPageId(), article.getWikiUrl());
 
         return article;
     }

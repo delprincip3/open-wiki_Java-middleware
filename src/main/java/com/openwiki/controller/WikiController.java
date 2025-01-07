@@ -58,24 +58,27 @@ public class WikiController {
             String requestBody = ctx.body();
             logger.info("Received request body: {}", requestBody);
             
-            // Parse manuale del JSON per estrarre i campi
             JsonNode jsonNode = objectMapper.readTree(requestBody);
             
             Article article = new Article();
             article.setTitle(jsonNode.get("title").asText());
             article.setContent(jsonNode.get("content").asText());
-            article.setImageUrl(jsonNode.has("image_url") ? jsonNode.get("image_url").asText() : null);
-            article.setPageId(jsonNode.has("page_id") ? jsonNode.get("page_id").asText() : null);
-            article.setWikiUrl(jsonNode.has("wiki_url") ? jsonNode.get("wiki_url").asText() : null);
+            
+            // Gestisci entrambi i formati (camelCase e snake_case)
+            String imageUrl = jsonNode.has("imageUrl") ? jsonNode.get("imageUrl").asText() :
+                             jsonNode.has("image_url") ? jsonNode.get("image_url").asText() : null;
+            String pageId = jsonNode.has("pageId") ? jsonNode.get("pageId").asText() :
+                           jsonNode.has("page_id") ? jsonNode.get("page_id").asText() : null;
+            String wikiUrl = jsonNode.has("wikiUrl") ? jsonNode.get("wikiUrl").asText() :
+                            jsonNode.has("wiki_url") ? jsonNode.get("wiki_url").asText() : null;
+            
+            article.setImageUrl(imageUrl);
+            article.setPageId(pageId);
+            article.setWikiUrl(wikiUrl);
             
             String userId = extractUserId(ctx);
             article.setUserId(userId);
             article.setDateDownloaded(LocalDateTime.now());
-            
-            // Assicurati che l'URL dell'immagine sia completo
-            if (article.getImageUrl() != null && article.getImageUrl().startsWith("//")) {
-                article.setImageUrl("https:" + article.getImageUrl());
-            }
             
             Article savedArticle = articleDAO.save(article);
             ctx.json(savedArticle);
@@ -101,8 +104,19 @@ public class WikiController {
     public void getFeaturedArticle(Context ctx) {
         try {
             Article article = wikiService.getFeaturedArticle();
+            
+            // Assicurati che l'URL dell'immagine sia completo
+            if (article.getImageUrl() != null && article.getImageUrl().startsWith("//")) {
+                article.setImageUrl("https:" + article.getImageUrl());
+            }
+            
+            // Log per debug
+            logger.info("Featured article fields - imageUrl: {}, pageId: {}, wikiUrl: {}", 
+                       article.getImageUrl(), article.getPageId(), article.getWikiUrl());
+            
             ctx.json(article);
         } catch (Exception e) {
+            logger.error("Failed to get featured article: {}", e.getMessage(), e);
             ctx.status(500).json(Map.of("error", "Failed to get featured article: " + e.getMessage()));
         }
     }
