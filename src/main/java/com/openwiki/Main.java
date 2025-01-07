@@ -13,6 +13,7 @@ import com.openwiki.middleware.AuthMiddleware;
 import com.openwiki.controller.AuthController;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.util.List;
 
 
 public class Main {
@@ -72,13 +73,13 @@ public class Main {
         app.delete("/api/articles/{id}", wikiController::deleteArticle);
         app.put("/api/articles/{id}", wikiController::updateArticle);
 
-        // Proteggi solo gli altri endpoint che necessitano autenticazione
-        app.before("/api/wikipedia/*", new AuthMiddleware());
-
-        // Wikipedia endpoints (protetti)
+        // Endpoint Wikipedia (senza autenticazione)
         app.get("/api/wikipedia/search", wikiController::search);
         app.get("/api/wikipedia/article/{title}", wikiController::getArticle);
         app.get("/api/wikipedia/featured", wikiController::getFeaturedArticle);
+
+        // Rimuovi la protezione degli endpoint Wikipedia
+        // app.before("/api/wikipedia/*", new AuthMiddleware());
 
         app.start(8080);
     }
