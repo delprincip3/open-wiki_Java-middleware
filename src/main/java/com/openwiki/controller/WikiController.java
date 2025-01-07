@@ -107,6 +107,28 @@ public class WikiController {
         }
     }
 
+    public void updateArticle(Context ctx) {
+        try {
+            String articleId = ctx.pathParam("id");
+            Article article = ctx.bodyAsClass(Article.class);
+            String userId = extractUserId(ctx);
+            
+            article.setId(articleId);
+            article.setUserId(userId);
+            
+            boolean updated = articleDAO.updateArticle(article);
+            if (updated) {
+                ctx.json(article);
+            } else {
+                ctx.status(404).json(Map.of("error", "Article not found or not owned by user"));
+            }
+            
+        } catch (Exception e) {
+            logger.error("Failed to update article: {}", e.getMessage(), e);
+            ctx.status(500).json(Map.of("error", "Failed to update article: " + e.getMessage()));
+        }
+    }
+
     private String extractUserId(Context ctx) {
         try {
             String sessionCookie = ctx.cookie("session");

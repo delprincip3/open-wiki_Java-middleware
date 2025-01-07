@@ -111,4 +111,25 @@ public class ArticleDAO {
             throw e;
         }
     }
+
+    public boolean updateArticle(Article article) throws SQLException {
+        String sql = "UPDATE saved_articles SET title = ?, content = ?, image_url = ?, wiki_url = ?, page_id = ? " +
+                     "WHERE id = ? AND user_id = ?";
+        
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, article.getTitle());
+            stmt.setString(2, article.getContent());
+            stmt.setString(3, article.getImageUrl());
+            stmt.setString(4, article.getWikiUrl());
+            stmt.setString(5, article.getPageId());
+            stmt.setInt(6, Integer.parseInt(article.getId()));
+            stmt.setInt(7, Integer.parseInt(article.getUserId()));
+            
+            int rowsAffected = stmt.executeUpdate();
+            logger.info("Update affected {} rows", rowsAffected);
+            return rowsAffected > 0;
+        }
+    }
 } 

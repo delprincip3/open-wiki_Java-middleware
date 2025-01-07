@@ -70,6 +70,7 @@ public class Main {
         app.post("/api/articles", wikiController::saveArticle);
         app.get("/api/articles", wikiController::getUserArticles);
         app.delete("/api/articles/{id}", wikiController::deleteArticle);
+        app.put("/api/articles/{id}", wikiController::updateArticle);
 
         // Proteggi solo gli altri endpoint che necessitano autenticazione
         app.before("/api/wikipedia/*", new AuthMiddleware());
