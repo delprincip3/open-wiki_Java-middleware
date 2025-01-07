@@ -1,10 +1,8 @@
 package com.openwiki.controller;
-
 import io.javalin.http.Context;
 import com.openwiki.service.WikiService;
 import com.openwiki.dao.ArticleDAO;
 import com.openwiki.model.Article;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.Base64;

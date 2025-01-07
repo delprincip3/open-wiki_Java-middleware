@@ -9,11 +9,11 @@ import com.openwiki.config.DatabaseConfig;
 import com.openwiki.dao.ArticleDAO;
 import java.sql.Connection;
 import com.openwiki.controller.WikiController;
-import com.openwiki.middleware.AuthMiddleware;
+
 import com.openwiki.controller.AuthController;
 
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.util.List;
+
 
 
 public class Main {
