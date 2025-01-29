@@ -185,7 +185,7 @@ I contributi sono benvenuti! Per modifiche importanti:
 2. Crea un branch per la tua feature (`git checkout -b feature/AmazingFeature`)
 3. Committa le modifiche (`git commit -m 'Add some AmazingFeature'`)
 4. Pusha sul branch (`git push origin feature/AmazingFeature`)
-5. Apri una Pull Request
+5. Apri una Pull Request ..
 
 ## 📄 Licenza
 
